@@ -1,4 +1,5 @@
-🏋️ AI Gym & Fitness Assistant — AI-Powered Workout, Diet & Habit Coach
+🏋️ AI Gym & Fitness Assistant
+— AI-Powered Workout, Diet & Habit Coach
 An AI-powered fitness assistant that uses your webcam to analyze exercise form in real time, tracks your workout performance and habits, calculates personalized nutrition targets, and answers fitness questions through a conversational AI coach.
 
 The system captures webcam frames, detects body landmarks using MediaPipe Pose, computes joint angles to count repetitions and score form, stores workout results for performance tracking, and uses the Google Gemini LLM to power a "Virtual Gym Buddy" chatbot for fitness, nutrition, and motivation guidance.
@@ -21,6 +22,7 @@ Answer fitness/nutrition/motivation questions using a Gemini-powered chatbot.
 Track workout history and visualize performance trends.
 Track daily habits, streaks, and weekly consistency.
 Avoid crashing or blocking the app when the AI chatbot is unavailable.
+
 ✨ Key Features
 🏋️ Real-Time Webcam Workout Detection
 Users grant camera access through the Streamlit interface and perform exercises directly in front of the browser.
@@ -193,7 +195,9 @@ python-dotenv	Loading environment variables (API keys)
 google-generativeai	Gemini LLM integration for the chatbot
 pandas / scikit-learn / Plotly	Reserved for future analytics (not yet wired into the app)
 pymongo	Reserved for future persistent storage (not yet wired into the app)
+
 📌 Notes & Limitations
+
 Only squats are currently supported as a tracked exercise.
 Workout history, habits, and chat history reset when the app restarts (no database persistence yet).
 Pose detection accuracy depends on lighting, camera angle, and joint visibility.
