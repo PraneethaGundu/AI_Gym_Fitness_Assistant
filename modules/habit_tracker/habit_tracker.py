@@ -1,65 +1,88 @@
-
 from datetime import date, timedelta
 
 
 class HabitTracker:
+    """
+    Fitness Habit Tracker.
+
+    A workout day is considered completed when the user
+    completes and saves a workout.
+    """
 
     def __init__(self):
+        self.completed_days = set()
 
-        self.habit_history = {}
-
-    # ========================================================
-    # MARK WORKOUT COMPLETE
-    # ========================================================
+    # ============================================================
+    # MARK WORKOUT
+    # ============================================================
 
     def mark_workout(self, workout_date=None):
 
         if workout_date is None:
             workout_date = date.today()
 
-        date_key = workout_date.isoformat()
+        if isinstance(workout_date, str):
+            workout_date = date.fromisoformat(workout_date)
 
-        self.habit_history[date_key] = True
+        self.completed_days.add(workout_date)
 
-    # ========================================================
+        return True
+
+    # ============================================================
     # REMOVE WORKOUT
-    # ========================================================
+    # ============================================================
 
     def remove_workout(self, workout_date=None):
 
         if workout_date is None:
             workout_date = date.today()
 
-        date_key = workout_date.isoformat()
+        if isinstance(workout_date, str):
+            workout_date = date.fromisoformat(workout_date)
 
-        self.habit_history[date_key] = False
+        self.completed_days.discard(workout_date)
 
-    # ========================================================
-    # CHECK WORKOUT STATUS
-    # ========================================================
+        return True
 
-    def is_workout_completed(self, workout_date):
+    # ============================================================
+    # CHECK WORKOUT
+    # ============================================================
 
-        date_key = workout_date.isoformat()
+    def is_workout_completed(self, workout_date=None):
 
-        return self.habit_history.get(
-            date_key,
-            False
-        )
+        if workout_date is None:
+            workout_date = date.today()
 
-    # ========================================================
+        if isinstance(workout_date, str):
+            workout_date = date.fromisoformat(workout_date)
+
+        return workout_date in self.completed_days
+
+    # ============================================================
     # CURRENT STREAK
-    # ========================================================
+    # ============================================================
 
     def get_current_streak(self):
 
+        if not self.completed_days:
+            return 0
+
         today = date.today()
+
+        # If today is completed, streak starts today.
+        if today in self.completed_days:
+            current_day = today
+
+        # Otherwise check whether yesterday was completed.
+        else:
+            current_day = today - timedelta(days=1)
+
+            if current_day not in self.completed_days:
+                return 0
 
         streak = 0
 
-        current_day = today
-
-        while self.is_workout_completed(current_day):
+        while current_day in self.completed_days:
 
             streak += 1
 
@@ -67,32 +90,24 @@ class HabitTracker:
 
         return streak
 
-    # ========================================================
+    # ============================================================
     # BEST STREAK
-    # ========================================================
+    # ============================================================
 
     def get_best_streak(self):
 
-        if not self.habit_history:
+        if not self.completed_days:
             return 0
 
-        completed_dates = sorted(
-            date.fromisoformat(day)
-            for day, completed in self.habit_history.items()
-            if completed
-        )
-
-        if not completed_dates:
-            return 0
+        sorted_days = sorted(self.completed_days)
 
         best_streak = 1
         current_streak = 1
 
-        for i in range(1, len(completed_dates)):
+        for i in range(1, len(sorted_days)):
 
             difference = (
-                completed_dates[i]
-                - completed_dates[i - 1]
+                sorted_days[i] - sorted_days[i - 1]
             ).days
 
             if difference == 1:
@@ -110,9 +125,17 @@ class HabitTracker:
 
         return best_streak
 
-    # ========================================================
+    # ============================================================
+    # TOTAL WORKOUT DAYS
+    # ============================================================
+
+    def get_total_workout_days(self):
+
+        return len(self.completed_days)
+
+    # ============================================================
     # WEEKLY STATISTICS
-    # ========================================================
+    # ============================================================
 
     def get_weekly_stats(self):
 
@@ -129,33 +152,68 @@ class HabitTracker:
         for i in range(7):
 
             current_day = (
-                start_of_week
-                + timedelta(days=i)
+                start_of_week + timedelta(days=i)
             )
 
-            if self.is_workout_completed(current_day):
+            if current_day in self.completed_days:
 
                 completed += 1
 
-        consistency = round(
-            (completed / 7) * 100
-        )
+        consistency = (
+            completed / 7
+        ) * 100
 
         return {
             "completed": completed,
-            "total": 7,
-            "consistency": consistency
+            "consistency": round(consistency, 2)
         }
 
-    # ========================================================
-    # TOTAL WORKOUT DAYS
-    # ========================================================
+    # ============================================================
+    # MONTHLY STATISTICS
+    # ============================================================
 
-    def get_total_workout_days(self):
+    def get_monthly_consistency(self):
 
-        return sum(
-            1
-            for completed
-            in self.habit_history.values()
-            if completed
+        today = date.today()
+
+        completed = 0
+
+        for i in range(30):
+
+            current_day = (
+                today - timedelta(days=i)
+            )
+
+            if current_day in self.completed_days:
+
+                completed += 1
+
+        return round(
+            (completed / 30) * 100,
+            2
         )
+
+    # ============================================================
+    # GET COMPLETED DATES
+    # ============================================================
+
+    def get_completed_dates(self):
+
+        return sorted(self.completed_days)
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    def get_summary(self):
+
+        weekly_stats = self.get_weekly_stats()
+
+        return {
+            "current_streak": self.get_current_streak(),
+            "best_streak": self.get_best_streak(),
+            "total_workout_days": self.get_total_workout_days(),
+            "weekly_completed": weekly_stats["completed"],
+            "weekly_consistency": weekly_stats["consistency"],
+            "monthly_consistency": self.get_monthly_consistency()
+        }

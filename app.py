@@ -10,7 +10,6 @@ from streamlit_webrtc import (
     VideoProcessorBase
 )
 
-
 from modules.workout.pose_detector import PoseDetector
 from modules.habit_tracker.habit_tracker import HabitTracker
 from modules.workout.squat_detector import (
@@ -65,33 +64,20 @@ st.divider()
 # ============================================================
 
 if "performance_tracker" not in st.session_state:
-
-    st.session_state.performance_tracker = (
-        PerformanceTracker()
-    )
+    st.session_state.performance_tracker = PerformanceTracker()
 
 if "habit_tracker" not in st.session_state:
-
-    st.session_state.habit_tracker = (
-        HabitTracker()
-    )
-
+    st.session_state.habit_tracker = HabitTracker()
 
 if "gym_chat_history" not in st.session_state:
-
     st.session_state.gym_chat_history = []
-
 
 if "gym_buddy" not in st.session_state:
 
     try:
-
-        st.session_state.gym_buddy = (
-            VirtualGymBuddy()
-        )
+        st.session_state.gym_buddy = VirtualGymBuddy()
 
     except Exception as e:
-
         st.session_state.gym_buddy = None
         st.session_state.gym_buddy_error = str(e)
 
@@ -587,11 +573,9 @@ class SquatVideoProcessor(VideoProcessorBase):
     def __del__(self):
 
         try:
-
             self.pose_detector.close()
 
         except Exception:
-
             pass
 
 
@@ -624,221 +608,229 @@ ctx = webrtc_streamer(
     async_processing=True
 )
 
+
 # ============================================================
 # CURRENT WORKOUT
 # ============================================================
 
-st.subheader("📊 Current Workout")
+@st.fragment(run_every="1s")
+def current_workout_section():
 
-st.write(
-    "Your workout statistics are automatically "
-    "collected from the AI Gym Trainer."
-)
-
-
-# ------------------------------------------------------------
-# DEFAULT VALUES
-# ------------------------------------------------------------
-
-current_stats = {
-    "reps": 0,
-    "good_depth": 0,
-    "shallow": 0,
-    "score": 0,
-    "stage": "up",
-    "knee_angle": 0,
-    "back_angle": 0
-}
-
-
-# ------------------------------------------------------------
-# GET VALUES DIRECTLY FROM VIDEO PROCESSOR
-# ------------------------------------------------------------
-
-if ctx.video_processor is not None:
-
-    current_stats = (
-        ctx.video_processor.get_workout_stats()
-    )
-
-
-# ============================================================
-# LIVE WORKOUT METRICS
-# ============================================================
-
-current_col1, current_col2, current_col3, current_col4 = (
-    st.columns(4)
-)
-
-
-with current_col1:
-
-    st.metric(
-        "Reps",
-        current_stats["reps"]
-    )
-
-
-with current_col2:
-
-    st.metric(
-        "Good Depth",
-        current_stats["good_depth"]
-    )
-
-
-with current_col3:
-
-    st.metric(
-        "Shallow",
-        current_stats["shallow"]
-    )
-
-
-with current_col4:
-
-    st.metric(
-        "Current Score",
-        f'{current_stats["score"]}/100'
-    )
-
-
-# ============================================================
-# LIVE DETAILS
-# ============================================================
-
-detail_col1, detail_col2, detail_col3 = st.columns(3)
-
-
-with detail_col1:
+    st.subheader("📊 Current Workout")
 
     st.write(
-        f"**Stage:** {current_stats['stage']}"
+        "Your workout statistics are automatically "
+        "collected from the AI Gym Trainer."
     )
 
+    # --------------------------------------------------------
+    # DEFAULT VALUES
+    # --------------------------------------------------------
 
-with detail_col2:
+    current_stats = {
+        "reps": 0,
+        "good_depth": 0,
+        "shallow": 0,
+        "score": 0,
+        "stage": "up",
+        "knee_angle": 0,
+        "back_angle": 0
+    }
 
-    st.write(
-        f"**Knee Angle:** "
-        f"{int(current_stats['knee_angle'])}°"
+    # --------------------------------------------------------
+    # GET LIVE VALUES FROM VIDEO PROCESSOR
+    # --------------------------------------------------------
+
+    if ctx.video_processor is not None:
+
+        current_stats = (
+            ctx.video_processor.get_workout_stats()
+        )
+
+    # ========================================================
+    # LIVE WORKOUT METRICS
+    # ========================================================
+
+    current_col1, current_col2, current_col3, current_col4 = (
+        st.columns(4)
     )
 
+    with current_col1:
 
-with detail_col3:
+        st.metric(
+            "Reps",
+            current_stats["reps"]
+        )
 
-    st.write(
-        f"**Back Angle:** "
-        f"{int(current_stats['back_angle'])}°"
-    )
+    with current_col2:
 
+        st.metric(
+            "Good Depth",
+            current_stats["good_depth"]
+        )
 
-# ============================================================
-# SAVE CURRENT WORKOUT
-# ============================================================
+    with current_col3:
 
-st.subheader("💾 Save Current Workout")
+        st.metric(
+            "Shallow",
+            current_stats["shallow"]
+        )
 
+    with current_col4:
 
-current_reps = current_stats["reps"]
+        st.metric(
+            "Current Score",
+            f'{current_stats["score"]}/100'
+        )
 
-current_good = current_stats["good_depth"]
+    # ========================================================
+    # LIVE DETAILS
+    # ========================================================
 
-current_shallow = current_stats["shallow"]
+    detail_col1, detail_col2, detail_col3 = st.columns(3)
 
-current_score = current_stats["score"]
+    with detail_col1:
 
+        st.write(
+            f"**Stage:** {current_stats['stage']}"
+        )
 
-# ------------------------------------------------------------
-# WORKOUT STATUS
-# ------------------------------------------------------------
+    with detail_col2:
 
-if current_reps > 0:
+        st.write(
+            f"**Knee Angle:** "
+            f"{int(current_stats['knee_angle'])}°"
+        )
 
-    st.success(
-        f"Workout detected: {current_reps} completed rep(s)."
-    )
+    with detail_col3:
 
-else:
+        st.write(
+            f"**Back Angle:** "
+            f"{int(current_stats['back_angle'])}°"
+        )
 
-    st.info(
-        "Complete some squats using the camera first."
-    )
+    # ========================================================
+    # SAVE CURRENT WORKOUT
+    # ========================================================
 
+    st.subheader("💾 Save Current Workout")
 
-# ------------------------------------------------------------
-# SAVE BUTTON
-# ------------------------------------------------------------
+    current_reps = current_stats["reps"]
+    current_good = current_stats["good_depth"]
+    current_shallow = current_stats["shallow"]
+    current_score = current_stats["score"]
 
-if st.button(
-    "💾 Save Current Workout",
-    use_container_width=True
-):
+    # --------------------------------------------------------
+    # WORKOUT STATUS
+    # --------------------------------------------------------
 
-    if current_reps == 0:
+    if current_reps > 0:
 
-        st.warning(
-            "Please complete at least one squat "
-            "before saving the workout."
+        st.success(
+            f"Workout detected: {current_reps} completed rep(s)."
         )
 
     else:
 
-        tracker = (
-            st.session_state.performance_tracker
+        st.info(
+            "Complete some squats using the camera first."
         )
 
-        # ------------------------------------------------
-        # SAVE AUTOMATICALLY DETECTED VALUES
-        # ------------------------------------------------
+    # --------------------------------------------------------
+    # SAVE BUTTON
+    # --------------------------------------------------------
 
-        record = tracker.create_workout_record(
-            exercise="Squat",
-            total_reps=current_reps,
-            good_reps=current_good,
-            shallow_reps=current_shallow,
-            average_score=current_score
-        )
+    if st.button(
+        "💾 Save Current Workout",
+        use_container_width=True
+    ):
 
-        # ------------------------------------------------
-        # SUCCESS MESSAGE
-        # ------------------------------------------------
+        if current_reps == 0:
 
-        st.success(
-            "✅ Current workout saved successfully!"
-        )
+            st.warning(
+                "Please complete at least one squat "
+                "before saving the workout."
+            )
 
-        st.write(
-            f"**Reps:** {record['total_reps']}"
-        )
+        else:
 
-        st.write(
-            f"**Good Depth:** {record['good_reps']}"
-        )
+            # =================================================
+            # PERFORMANCE TRACKER
+            # =================================================
 
-        st.write(
-            f"**Shallow:** {record['shallow_reps']}"
-        )
+            tracker = (
+                st.session_state.performance_tracker
+            )
 
-        st.write(
-            f"**Workout Accuracy:** "
-            f"{record['accuracy']}%"
-        )
+            record = tracker.create_workout_record(
+                exercise="Squat",
+                total_reps=current_reps,
+                good_reps=current_good,
+                shallow_reps=current_shallow,
+                average_score=current_score
+            )
 
-        st.write(
-            f"**Workout Score:** "
-            f"{record['average_score']}/100"
-        )
+            # =================================================
+            # AUTOMATIC HABIT TRACKER UPDATE
+            # =================================================
 
-        # ------------------------------------------------
-        # RESET FOR NEXT WORKOUT
-        # ------------------------------------------------
+            habit_tracker = (
+                st.session_state.habit_tracker
+            )
 
-        if ctx.video_processor is not None:
+            habit_tracker.mark_workout(
+                date.today()
+            )
 
-            ctx.video_processor.reset_workout()
+            # =================================================
+            # SUCCESS MESSAGE
+            # =================================================
 
-        st.rerun()
+            st.success(
+                "✅ Workout saved successfully!"
+            )
+
+            st.success(
+                "🔥 Today's workout has been "
+                "automatically added to your habit tracker!"
+            )
+
+            # ------------------------------------------------
+            # SAVED WORKOUT DETAILS
+            # ------------------------------------------------
+
+            st.write(
+                f"**Reps:** {record['total_reps']}"
+            )
+
+            st.write(
+                f"**Good Depth:** {record['good_reps']}"
+            )
+
+            st.write(
+                f"**Shallow:** {record['shallow_reps']}"
+            )
+
+            st.write(
+                f"**Workout Accuracy:** "
+                f"{record['accuracy']}%"
+            )
+
+            st.write(
+                f"**Workout Score:** "
+                f"{record['average_score']}/100"
+            )
+
+            # =================================================
+            # RESET CAMERA WORKOUT
+            # =================================================
+
+            if ctx.video_processor is not None:
+
+                ctx.video_processor.reset_workout()
+
+
+current_workout_section()
 
 
 st.divider()
@@ -960,11 +952,9 @@ if st.button(
         "📊 Your Nutrition Results"
     )
 
-
     result_col1, result_col2, result_col3 = (
         st.columns(3)
     )
-
 
     with result_col1:
 
@@ -977,14 +967,12 @@ if st.button(
             f"Category: **{bmi_category}**"
         )
 
-
     with result_col2:
 
         st.metric(
             "BMR",
             f"{bmr} kcal/day"
         )
-
 
     with result_col3:
 
@@ -993,11 +981,9 @@ if st.button(
             f"{daily_calories} kcal/day"
         )
 
-
     st.info(
         get_calorie_message(goal)
     )
-
 
     # ========================================================
     # MEAL PLAN
@@ -1013,9 +999,7 @@ if st.button(
         diet_type
     )
 
-
     meal_columns = st.columns(4)
-
 
     meal_names = [
         "Breakfast",
@@ -1023,7 +1007,6 @@ if st.button(
         "Snack",
         "Dinner"
     ]
-
 
     for column, meal_name in zip(
         meal_columns,
@@ -1060,9 +1043,9 @@ st.write(
 )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # DISPLAY CHAT HISTORY
-# ------------------------------------------------------------
+# ============================================================
 
 for message in st.session_state.gym_chat_history:
 
@@ -1075,9 +1058,9 @@ for message in st.session_state.gym_chat_history:
         )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # CHAT INPUT
-# ------------------------------------------------------------
+# ============================================================
 
 user_message = st.chat_input(
     "Ask your Virtual Gym Buddy..."
@@ -1092,14 +1075,12 @@ if user_message:
             user_message
         )
 
-
     st.session_state.gym_chat_history.append(
         {
             "role": "user",
             "content": user_message
         }
     )
-
 
     if st.session_state.gym_buddy is not None:
 
@@ -1115,11 +1096,9 @@ if user_message:
                     )
                 )
 
-
             st.markdown(
                 response
             )
-
 
         st.session_state.gym_chat_history.append(
             {
@@ -1127,7 +1106,6 @@ if user_message:
                 "content": response
             }
         )
-
 
     else:
 
@@ -1138,9 +1116,9 @@ if user_message:
         )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # CLEAR CHAT
-# ------------------------------------------------------------
+# ============================================================
 
 if st.session_state.gym_chat_history:
 
@@ -1227,17 +1205,14 @@ if tracker.workout_history:
         "📋 Workout History"
     )
 
-
     history_data = (
         tracker.workout_history
     )
-
 
     st.dataframe(
         history_data,
         use_container_width=True
     )
-
 
     # ========================================================
     # PERFORMANCE PROGRESS
@@ -1247,9 +1222,7 @@ if tracker.workout_history:
         "📈 Performance Progress"
     )
 
-
     chart_data = []
-
 
     for index, record in enumerate(
         history_data,
@@ -1264,7 +1237,6 @@ if tracker.workout_history:
             }
         )
 
-
     st.line_chart(
         chart_data,
         x="Workout",
@@ -1273,7 +1245,6 @@ if tracker.workout_history:
             "Score"
         ]
     )
-
 
 else:
 
@@ -1285,242 +1256,243 @@ else:
 
 st.divider()
 
+
 # ============================================================
 # FITNESS HABIT TRACKER
 # ============================================================
 
-st.header("🔥 Fitness Habit Tracker")
+@st.fragment(run_every="1s")
+def fitness_habit_tracker_section():
 
-st.write(
-    "Build consistency, maintain your workout streak, "
-    "and track your fitness habits."
-)
+    st.header("🔥 Fitness Habit Tracker")
 
-
-habit_tracker = (
-    st.session_state.habit_tracker
-)
-
-
-# ============================================================
-# WEEKLY STATISTICS
-# ============================================================
-
-weekly_stats = (
-    habit_tracker.get_weekly_stats()
-)
-
-current_streak = (
-    habit_tracker.get_current_streak()
-)
-
-best_streak = (
-    habit_tracker.get_best_streak()
-)
-
-total_workout_days = (
-    habit_tracker.get_total_workout_days()
-)
-
-
-habit_col1, habit_col2, habit_col3, habit_col4 = (
-    st.columns(4)
-)
-
-
-with habit_col1:
-
-    st.metric(
-        "🔥 Current Streak",
-        f"{current_streak} days"
+    st.write(
+        "Build consistency, maintain your workout streak, "
+        "and track your fitness habits."
     )
 
-
-with habit_col2:
-
-    st.metric(
-        "🏆 Best Streak",
-        f"{best_streak} days"
+    habit_tracker = (
+        st.session_state.habit_tracker
     )
 
+    # ========================================================
+    # WEEKLY STATISTICS
+    # ========================================================
 
-with habit_col3:
-
-    st.metric(
-        "💪 This Week",
-        f'{weekly_stats["completed"]}/7'
+    weekly_stats = (
+        habit_tracker.get_weekly_stats()
     )
 
-
-with habit_col4:
-
-    st.metric(
-        "📊 Consistency",
-        f'{weekly_stats["consistency"]}%'
+    current_streak = (
+        habit_tracker.get_current_streak()
     )
 
-
-# ============================================================
-# WEEKLY HABIT CALENDAR
-# ============================================================
-
-st.subheader("📅 This Week")
-
-
-today = date.today()
-
-start_of_week = (
-    today - timedelta(
-        days=today.weekday()
-    )
-)
-
-week_columns = st.columns(7)
-
-day_names = [
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat",
-    "Sun"
-]
-
-
-for i, column in enumerate(week_columns):
-
-    current_day = (
-        start_of_week
-        + timedelta(days=i)
+    best_streak = (
+        habit_tracker.get_best_streak()
     )
 
-    completed = (
+    total_workout_days = (
+        habit_tracker.get_total_workout_days()
+    )
+
+    habit_col1, habit_col2, habit_col3, habit_col4 = (
+        st.columns(4)
+    )
+
+    with habit_col1:
+
+        st.metric(
+            "🔥 Current Streak",
+            f"{current_streak} days"
+        )
+
+    with habit_col2:
+
+        st.metric(
+            "🏆 Best Streak",
+            f"{best_streak} days"
+        )
+
+    with habit_col3:
+
+        st.metric(
+            "💪 This Week",
+            f'{weekly_stats["completed"]}/7'
+        )
+
+    with habit_col4:
+
+        st.metric(
+            "📊 Consistency",
+            f'{weekly_stats["consistency"]}%'
+        )
+
+    # ========================================================
+    # WEEKLY HABIT CALENDAR
+    # ========================================================
+
+    st.subheader("📅 This Week")
+
+    today = date.today()
+
+    start_of_week = (
+        today - timedelta(
+            days=today.weekday()
+        )
+    )
+
+    week_columns = st.columns(7)
+
+    day_names = [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+    ]
+
+    for i, column in enumerate(week_columns):
+
+        current_day = (
+            start_of_week
+            + timedelta(days=i)
+        )
+
+        completed = (
+            habit_tracker.is_workout_completed(
+                current_day
+            )
+        )
+
+        with column:
+
+            st.markdown(
+                f"**{day_names[i]}**"
+            )
+
+            st.caption(
+                current_day.strftime("%d %b")
+            )
+
+            if completed:
+
+                st.success(
+                    "✅ Done"
+                )
+
+            else:
+
+                st.info(
+                    "⬜ Rest"
+                )
+
+    # ========================================================
+    # TODAY'S HABIT
+    # ========================================================
+
+    st.subheader("🏋️ Today's Habit")
+
+    today_completed = (
         habit_tracker.is_workout_completed(
-            current_day
+            today
         )
     )
 
-    with column:
-
-        st.markdown(
-            f"**{day_names[i]}**"
-        )
-
-        st.caption(
-            current_day.strftime("%d %b")
-        )
-
-        if completed:
-
-            st.success(
-                "✅ Done"
-            )
-
-        else:
-
-            st.info(
-                "⬜ Rest"
-            )
-
-
-# ============================================================
-# MARK TODAY'S WORKOUT
-# ============================================================
-
-st.subheader("🏋️ Today's Habit")
-
-
-today_completed = (
-    habit_tracker.is_workout_completed(
-        today
-    )
-)
-
-
-if today_completed:
-
-    st.success(
-        "🎉 Today's workout is completed!"
-    )
-
-    if st.button(
-        "↩️ Undo Today's Workout",
-        use_container_width=True
-    ):
-
-        habit_tracker.remove_workout(today)
-
-        st.rerun()
-
-else:
-
-    st.info(
-        "You haven't marked today's workout yet."
-    )
-
-    if st.button(
-        "✅ Mark Today's Workout Complete",
-        use_container_width=True
-    ):
-
-        habit_tracker.mark_workout(today)
+    if today_completed:
 
         st.success(
-            "🔥 Great job! Your workout has been added "
-            "to today's habit tracker."
+            "🎉 Today's workout is completed!"
         )
 
-        st.rerun()
+        if st.button(
+            "↩️ Undo Today's Workout",
+            use_container_width=True,
+            key="undo_today_habit"
+        ):
 
+            habit_tracker.remove_workout(
+                today
+            )
 
-# ============================================================
-# MOTIVATION
-# ============================================================
+    else:
 
-st.subheader("💬 Daily Motivation")
+        st.info(
+            "You haven't marked today's workout yet."
+        )
 
+        if st.button(
+            "✅ Mark Today's Workout Complete",
+            use_container_width=True,
+            key="mark_today_habit"
+        ):
 
-if current_streak == 0:
+            habit_tracker.mark_workout(
+                today
+            )
 
-    motivation = (
-        "💪 Start today! Your first workout is "
-        "the beginning of your streak."
+    # ========================================================
+    # MOTIVATION
+    # ========================================================
+
+    st.subheader("💬 Daily Motivation")
+
+    # Recalculate after possible habit update
+    current_streak = (
+        habit_tracker.get_current_streak()
     )
 
-elif current_streak < 3:
+    if current_streak == 0:
 
-    motivation = (
-        "🔥 Great start! Keep going and build "
-        "your consistency."
+        motivation = (
+            "💪 Start today! Your first workout is "
+            "the beginning of your streak."
+        )
+
+    elif current_streak < 3:
+
+        motivation = (
+            "🔥 Great start! Keep going and build "
+            "your consistency."
+        )
+
+    elif current_streak < 7:
+
+        motivation = (
+            "🚀 You're building a strong habit! "
+            "Don't break the streak."
+        )
+
+    else:
+
+        motivation = (
+            "🏆 Amazing consistency! You're maintaining "
+            "a powerful fitness habit."
+        )
+
+    st.info(
+        motivation
     )
 
-elif current_streak < 7:
+    # ========================================================
+    # TOTAL WORKOUT DAYS
+    # ========================================================
 
-    motivation = (
-        "🚀 You're building a strong habit! "
-        "Don't break the streak."
+    total_workout_days = (
+        habit_tracker.get_total_workout_days()
     )
 
-else:
-
-    motivation = (
-        "🏆 Amazing consistency! You're maintaining "
-        "a powerful fitness habit."
+    st.caption(
+        f"🏋️ Total workout days tracked: "
+        f"{total_workout_days}"
     )
 
 
-st.info(motivation)
+fitness_habit_tracker_section()
 
 
-# ============================================================
-# TOTAL WORKOUT DAYS
-# ============================================================
-
-st.caption(
-    f"🏋️ Total workout days tracked: "
-    f"{total_workout_days}"
-)
+st.divider()
 
 
 # ============================================================
